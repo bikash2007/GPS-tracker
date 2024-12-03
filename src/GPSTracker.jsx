@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -33,11 +33,12 @@ const RecenterMap = ({ center }) => {
 };
 
 const GPSTracker = () => {
-  const [currentLocation, setCurrentLocation] = useState({ latitude: 27.66525, longitude: 85.26676, time: '' });
+  const [currentLocation, setCurrentLocation] = useState({ latitude: 27.66525, longitude: 85.26676 });
+  const [currenttime, setCurrenttime] = useState('');
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const eventSource = new EventSource('http://172.188.16.118:8000/sse/');
+    const eventSource = new EventSource('https://gps.goodwish.com.np/sse/');
 
     eventSource.onmessage = (event) => {
       try {
@@ -49,15 +50,16 @@ const GPSTracker = () => {
         // Parse the sanitized JSON
         const data = JSON.parse(sanitizedData);
 
-        // Parse latitude, longitude, and time
+        // Parse latitude and longitude from the provided format
         const latitude = convertDMSToDecimal(data.latitude.trim());
         const longitude = convertDMSToDecimal(data.longitude.trim());
-        const time = data.time.trim();
-
+        
         // Update state
-        const newLocation = { latitude, longitude, time };
+        
+        setCurrenttime(data.time)
+        const newLocation = { latitude, longitude };
         setCurrentLocation(newLocation);
-        setHistory((prevHistory) => [...prevHistory, newLocation]);
+        setHistory((prevHistory) => [...prevHistory, [latitude, longitude]]);
       } catch (error) {
         console.error('Error parsing SSE data:', error);
         console.error('Received data:', event.data); // Log raw data for debugging
@@ -94,27 +96,14 @@ const GPSTracker = () => {
           <Popup>
             Current Location: <br />
             Latitude: {currentLocation.latitude.toFixed(5)} <br />
-            Longitude: {currentLocation.longitude.toFixed(5)} <br />
-            Time: {currentLocation.time}
+            Longitude: {currentLocation.longitude.toFixed(5)}
+            <br/>
+            time:{currenttime}
           </Popup>
         </Marker>
 
-        {/* Markers for History */}
-        {history.map((point, index) => (
-          <Marker key={index} position={[point.latitude, point.longitude]}>
-            <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent>
-              {point.time}
-            </Tooltip>
-          </Marker>
-        ))}
-
         {/* Polyline for the path (history) */}
-        {history.length > 1 && (
-          <Polyline
-            positions={history.map((point) => [point.latitude, point.longitude])}
-            color="blue"
-          />
-        )}
+        {history.length > 1 && <Polyline positions={history} color="blue" />}
       </MapContainer>
     </div>
   );
