@@ -1,10 +1,11 @@
 import React from 'react'
-import GPSTracker from './GPSTracker'
+import { Outlet } from 'react-router-dom'
 
 const App = () => {
   return (
     <div>
-      <GPSTracker />
+   
+    <Outlet/>
     </div>
   )
 }
