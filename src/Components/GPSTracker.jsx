@@ -41,7 +41,7 @@ const GPSTracker = () => {
  const code = 
    useEffect(() => {
       const params = new URLSearchParams(window.location.search);
-     const code = params.get('emi'); // Retrieves the 'code' parameter
+     const code = params.get('imei'); // Retrieves the 'code' parameter
      console.log(code)
      if (code) {
        
