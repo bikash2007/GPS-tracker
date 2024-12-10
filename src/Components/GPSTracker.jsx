@@ -11,16 +11,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Helper function to convert DMS (space-separated) to Decimal
-const convertDMSToDecimal = (dms) => {
-  const dmsParts = dms.split(" ").map(parseFloat);
-  if (dmsParts.length !== 3) {
-    console.error("Invalid DMS format:", dms);
-    return 0;
-  }
-  const [degrees, minutes, seconds] = dmsParts;
-  return degrees + minutes / 60 + seconds / 3600;
-};
+
 
 // Component to recenter map on new location
 const RecenterMap = ({ center }) => {
@@ -37,12 +28,13 @@ const GPSTracker = () => {
     longitude: 85.26676,
   });
   const [currentTime, setCurrentTime] = useState("");
+  const [speed, setSpeed] = useState("");
+  const [course, setCourse] = useState("");
   const [history, setHistory] = useState([]);
- const code = 
+ 
    useEffect(() => {
       const params = new URLSearchParams(window.location.search);
      const code = params.get('imei'); // Retrieves the 'code' parameter
-     console.log(code)
      if (code) {
        
        const eventSource = new EventSource(`https://gps.goodwish.com.np/sse/${code}/`);
@@ -53,10 +45,12 @@ const GPSTracker = () => {
            sanitizedData = sanitizedData.replace(/'/g, '"');
            const data = JSON.parse(sanitizedData);
            
-           const latitude = convertDMSToDecimal(data.latitude.trim());
-        const longitude = convertDMSToDecimal(data.longitude.trim());
+           const latitude = data.latitude
+        const longitude = data.longitude;
         
-        setCurrentTime(data.time);
+           setCurrentTime(data.time);
+           setCourse(data.course);
+           setSpeed(data.speed)
         const newLocation = { latitude, longitude };
         setCurrentLocation(newLocation);
         setHistory((prevHistory) => [...prevHistory, [latitude, longitude]]);
@@ -87,13 +81,19 @@ const GPSTracker = () => {
       <div className="absolute top-16 left-4 bg-white shadow-lg rounded-lg p-4 z-10">
         <h2 className="text-lg font-bold mb-2">Current Location</h2>
         <p>
-          <strong>Latitude:</strong> {currentLocation.latitude.toFixed(5)}
+          <strong>Latitude:</strong> {currentLocation.latitude}
         </p>
         <p>
-          <strong>Longitude:</strong> {currentLocation.longitude.toFixed(5)}
+          <strong>Longitude:</strong> {currentLocation.longitude}
         </p>
         <p>
           <strong>Time:</strong> {currentTime}
+        </p>
+        <p>
+          <strong>Speed:</strong> {speed}
+        </p>
+        <p>
+          <strong>Course:</strong> {course}
         </p>
       </div>
 
@@ -113,12 +113,17 @@ const GPSTracker = () => {
         <Marker position={[currentLocation.latitude, currentLocation.longitude]}>
           <Popup>
             <p>
-              <strong>Latitude:</strong> {currentLocation.latitude.toFixed(5)}
+              <strong>Latitude:</strong> {currentLocation.latitude}
               <br />
-              <strong>Longitude:</strong> {currentLocation.longitude.toFixed(5)}
+              <strong>Longitude:</strong> {currentLocation.longitude}
               <br />
               <strong>Time:</strong> {currentTime}
-            </p>
+            <br></br>
+            
+          <strong>Speed:</strong> {speed}
+        <br/>
+          <strong>Course:</strong> {course}
+        </p>
           </Popup>
         </Marker>
 
